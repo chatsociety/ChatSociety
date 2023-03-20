@@ -238,12 +238,9 @@ void vReflect(vec* r, const vec v, const vec n)
 
 int vEqualTol(const vec a, const vec b, const float tol)
 {
-    if( a.x >= b.x - tol && a.x <= b.x + tol &&
-        a.y >= b.y - tol && a.y <= b.y + tol &&
-        a.z >= b.z - tol && a.z <= b.z + tol )
-        return 1;
-    else
-        return 0;
+    return  a.x >= b.x - tol && a.x <= b.x + tol &&
+            a.y >= b.y - tol && a.y <= b.y + tol &&
+            a.z >= b.z - tol && a.z <= b.z + tol;
 }
 
 void vMin(vec* r, const vec v1, const vec v2)
@@ -285,10 +282,7 @@ int vec_ftoi(float f)
 
 int vEqualInt(const vec a, const vec b)
 {
-    if(vec_ftoi(a.x) == vec_ftoi(b.x) && vec_ftoi(a.y) == vec_ftoi(b.y) && vec_ftoi(a.z) == vec_ftoi(b.z))
-        return 1;
-    else
-        return 0;
+    return vec_ftoi(a.x) == vec_ftoi(b.x) && vec_ftoi(a.y) == vec_ftoi(b.y) && vec_ftoi(a.z) == vec_ftoi(b.z);
 }
 
 float vMod(const vec v)
