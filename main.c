@@ -8,8 +8,7 @@
 
     ChatSociety.org, the concentric rendering
     is to get the transparent windows on the
-    buildings rendering correctly.
-    
+    buildings rendering correctly.  
 */
 
 #include <emscripten.h>
@@ -37,7 +36,6 @@
 
 #define uint GLuint
 #define sint GLint
-#define f32 GLfloat
 #define forceinline __attribute__((always_inline)) inline
 
 //*************************************
@@ -48,14 +46,14 @@ SDL_Window* wnd;
 SDL_GLContext glc;
 Uint32 winw = 0, winh = 0;
 float ww, wh;
-f32 aspect, t = 0.f;
+float aspect, t = 0.f;
 uint ks[9] = {0}; // keystate
 uint istouch = 0;
 
 // camera vars
-f32 sens = 0.003f;
-f32 xrot = 0.f;
-f32 yrot = 1.5f;
+float sens = 0.003f;
+float xrot = 0.f;
+float yrot = 1.5f;
 float ddist = 32.f; // draw distance
 float ddist2 = 1024.f; // draw distance squared
 
@@ -102,7 +100,7 @@ ESModel mdlFace;
 // utility functions
 //*************************************
 void timestamp(char* ts){const time_t tt = time(0);strftime(ts, 16, "%H:%M:%S", localtime(&tt));}
-forceinline f32 f32Time(){return ((f32)SDL_GetTicks())*0.001f;}
+forceinline float floatTime(){return ((float)SDL_GetTicks())*0.001f;}
 char chaturl[512];
 void genChat()
 {
@@ -203,7 +201,7 @@ void get_data_callback(void* user_data, void* buff, int size)
         nps[pi].y = -nps[pi].y;
         nps[pi].rot = -nps[pi].rot;
         //printf("D: %f %f %f, %f, %f %f %f %f\n", nps[pi].x, nps[pi].y,  nps[pi].z, nps[pi].rot, nps[pi].c1, nps[pi].c2, nps[pi].c3, nps[pi].c4);
-        nps[pi].t = f32Time();
+        nps[pi].t = floatTime();
         pi++;
     }
     gotresponse = 1;
@@ -233,11 +231,11 @@ void dispatchNetwork()
 void doPerspective()
 {
     glViewport(0, 0, winw, winh);
-    ww = (f32)winw;
-    wh = (f32)winh;
+    ww = (float)winw;
+    wh = (float)winh;
     mIdent(&projection);
     mPerspective(&projection, 60.0f, ww / wh, 0.01f, 333.f);
-    glUniformMatrix4fv(projection_id, 1, GL_FALSE, (f32*)&projection.m[0][0]);
+    glUniformMatrix4fv(projection_id, 1, GL_FALSE, (float*)&projection.m[0][0]);
 }
 EM_BOOL emscripten_resize_event(int eventType, const EmscriptenUiEvent *uiEvent, void *userData)
 {
@@ -268,20 +266,82 @@ void main_loop()
 //*************************************
 // time delta for interpolation
 //*************************************
-    static f32 lt = 0;
-    t = f32Time();
-    const f32 dt = t-lt;
+    static float lt = 0;
+    t = floatTime();
+    const float dt = t-lt;
     lt = t;
 
 //*************************************
 // input handling
 //*************************************
+    static float tsx=0, tsy=0, tdx=0, tdy=0;
     static int mx=0, my=0, lx=0, ly=0, md=0;
     SDL_Event event;
     while(SDL_PollEvent(&event))
     {
         switch(event.type)
         {
+            case SDL_FINGERDOWN:
+            {
+                if(istouch == 0)
+                {
+                    emscripten_run_script("alert('The buttons are invisible but the layout is simply; left side of screen is touch and drag for movement, right side is look. Left side top and bottom are buttons to take you up/down floors in the buildings and the right side bottom is a button to open the chat for the current floor of the building.');");
+                    ddist = 12.f;
+                    ddist2=(ddist*ddist)+10.f;
+                    istouch = 1;
+                    break;
+                }
+                if(event.tfinger.x > 0.5f) // look side
+                {
+                    if(event.tfinger.y > 0.87f) // chat
+                    {
+                        popChat();
+                    }
+                    else // look
+                    {
+                        lx = event.tfinger.x * winw;
+                        ly = event.tfinger.y * winh;
+                        mx = lx;
+                        my = ly;
+                        sens = 0.006f;
+                    }
+                }
+                else // move side
+                {
+                    if(event.tfinger.y < 0.13f && pi == 1 && pf < 21.f){pf+=1.f;} // up
+                    else if(event.tfinger.y > 0.87f && pi == 1 && pf > 0.f){pf-=1.f;} // down
+                    else // move
+                    {
+                        tsx = event.tfinger.x;
+                        tsy = event.tfinger.y;
+                    }
+                }
+            }
+            break;
+
+            case SDL_FINGERUP:
+            {
+                if(event.tfinger.x < 0.5f){tsx=0, tsy=0, tdx=0.f, tdy=0.f;}
+            }
+            break;
+
+            case SDL_FINGERMOTION:
+            {
+                if(event.tfinger.x > 0.5f)
+                {
+                    mx = event.tfinger.x * ww;
+                    my = event.tfinger.y * wh;
+                }
+                else if(tsx != 0.f && tsy != 0.f)
+                {
+                    tdx = tsx-event.tfinger.x;
+                    tdy = tsy-event.tfinger.y;
+                    if(fabsf(tdx) < 0.001f){tdx = 0.f;}
+                    if(fabsf(tdy) < 0.001f){tdy = 0.f;}
+                }
+            }
+            break;
+
             case SDL_KEYDOWN:
             {
                 static uint show_splash = 0;
@@ -335,117 +395,10 @@ void main_loop()
             }
             break;
 
-            case SDL_FINGERDOWN:
-            {
-                if(istouch == 0)
-                {
-                    emscripten_run_script("alert('The buttons are invisible but the layout is four buttons at the top of the screen, forward and backward on the left and right corners, up and down levels of the buildings in the center left and right and upper left and right of the screen is strafe left and right. Center screen allows free look with touch and drag. To pop a chat tap the bottom center of the screen, chats will open in a secondary tab/popup window.');");
-                    ddist = 12.f;
-                    ddist2=(ddist*ddist)+10.f;
-                    istouch = 1;
-                    break;
-                }
-                static Uint32 lt = 0;
-                Uint32 pt = SDL_GetTicks() > lt;
-                if(event.tfinger.y < 0.2f)
-                {
-                    if(pt)
-                    {
-                        if(event.tfinger.x < 0.25f)
-                        {
-                            ks[0] = 1;
-                            ks[2] = 0;
-                        }
-                        else if(event.tfinger.x > 0.25f && event.tfinger.x < 0.5f)
-                        {
-                            if(pi == 1)
-                            {
-                                if(pf < 21.f){pf+=1.f;}
-                            }
-                        }
-                        else if(event.tfinger.x > 0.5f && event.tfinger.x < 0.75f)
-                        {
-                            if(pi == 1)
-                            {
-                                if(pf > 0.f){pf-=1.f;}
-                            }
-                        }
-                        else if(event.tfinger.x > 0.75f)
-                        {
-                            ks[2] = 1;
-                            ks[0] = 0;
-                        }
-                        lt = SDL_GetTicks()+333;
-                    }
-                }
-                else
-                {
-                    if(pt && event.tfinger.x < 0.25f)
-                    {
-                        ks[1] = 1;
-                        ks[3] = 0;
-                        lt = SDL_GetTicks()+333;
-                    }
-                    else if(pt && event.tfinger.x > 0.75f)
-                    {
-                        ks[3] = 1;
-                        ks[1] = 0;
-                        lt = SDL_GetTicks()+333;
-                    }
-                    else
-                    {
-                        lx = event.tfinger.x * winw;
-                        ly = event.tfinger.y * winh;
-                        mx = lx;
-                        my = ly;
-                        sens = 0.006f;
-                        md = 2;
-                    }
-                }
-            }
-            break;
-
-            case SDL_FINGERUP:
-            {
-                static Uint32 lt = 0;
-                if(SDL_GetTicks() > lt)
-                {
-                    if(event.tfinger.y < 0.2f)
-                    {
-                        if(event.tfinger.x < 0.25f)
-                        {
-                            ks[0] = 0;
-                            ks[2] = 0;
-                        }
-                        else if(event.tfinger.x > 0.75f)
-                        {
-                            ks[0] = 0;
-                            ks[2] = 0;
-                        }
-                    }
-                    else
-                    {
-                        if(event.tfinger.x < 0.25f)
-                        {
-                            ks[1] = 0;
-                            ks[3] = 0;
-                        }
-                        else if(event.tfinger.x > 0.75f)
-                        {
-                            ks[1] = 0;
-                            ks[3] = 0;
-                        }
-                        else if(event.tfinger.y > 0.9f)
-                            popChat();
-                    }
-                    lt = SDL_GetTicks()+333;
-                }
-                md = 0;
-            }
-            break;
-
             case SDL_MOUSEBUTTONDOWN:
             {
+                if(istouch == 1){break;}
+
                 lx = event.button.x;
                 ly = event.button.y;
                 mx = event.button.x;
@@ -464,21 +417,9 @@ void main_loop()
             }
             break;
 
-            case SDL_FINGERMOTION:
-            {
-                if(event.tfinger.y < 0.2f || event.tfinger.x < 0.25f || event.tfinger.x > 0.75f)
-                    break;
-
-                mx = event.tfinger.x * ww;
-                my = event.tfinger.y * wh;
-            }
-            break;
-
             case SDL_MOUSEMOTION:
             {
-                if(istouch == 1)
-                    break;
-
+                if(istouch == 1){break;}
                 if(md > 0)
                 {
                     mx = event.motion.x;
@@ -489,6 +430,7 @@ void main_loop()
 
             case SDL_MOUSEBUTTONUP:
             {
+                if(istouch == 1){break;}
                 md = 0;
             }
             break;
@@ -538,6 +480,24 @@ void main_loop()
         vec m;
         vMulS(&m, vdc, move_speed * dt);
         vAdd(&pp, pp, m);
+    }
+
+    // touch move
+    if(tdx != 0.f && tdy != 0.f)
+    {
+        float ttdx = tdx * 8.f;
+        float ttdy = tdy * 6.f;
+        if(ww > wh){ttdx *= ww/wh;}
+        if(wh > ww){ttdy *= wh/ww;}
+        if(ttdx > 1.6f){ttdx = 1.6f;}
+        if(ttdy > 1.6f){ttdy = 1.6f;}
+        vec vdc, m;
+        mGetViewZ(&vdc, view);
+        vMulS(&m, vdc, ttdy * dt);
+        vSub(&pp, pp, m);
+        mGetViewX(&vdc, view);
+        vMulS(&m, vdc, ttdx * dt);
+        vSub(&pp, pp, m);
     }
 
     if(ks[5] == 1) // LEFT
@@ -636,7 +596,7 @@ void main_loop()
 
     // shade colored lambertian
     shadeLambert1(&position_id, &projection_id, &modelview_id, &lightpos_id, &normal_id, &color_id, &opacity_id);
-    glUniformMatrix4fv(projection_id, 1, GL_FALSE, (f32*)&projection.m[0][0]);
+    glUniformMatrix4fv(projection_id, 1, GL_FALSE, (float*)&projection.m[0][0]);
     glUniform3f(lightpos_id, 0.f, 0.f, 0.f);
     glUniform1f(opacity_id, 1.f);
 
@@ -645,7 +605,7 @@ void main_loop()
     mIdent(&model);
     mSetPos(&model, (vec){-pp.x, -pp.y, 0.f});
     mMul(&modelview, &model, &view);
-    glUniformMatrix4fv(modelview_id, 1, GL_FALSE, (f32*)&modelview.m[0][0]);
+    glUniformMatrix4fv(modelview_id, 1, GL_FALSE, (float*)&modelview.m[0][0]);
     glUniform3f(color_id, 0.28f, 0.75f, 0.37f);
     glDrawElements(GL_TRIANGLES, floor_numind, GL_UNSIGNED_BYTE, 0);
 
@@ -659,7 +619,7 @@ void main_loop()
             mIdent(&model);
             mSetPos(&model, (vec){x, y, 0.f});
             mMul(&modelview, &model, &view);
-            glUniformMatrix4fv(modelview_id, 1, GL_FALSE, (f32*)&modelview.m[0][0]);
+            glUniformMatrix4fv(modelview_id, 1, GL_FALSE, (float*)&modelview.m[0][0]);
             glDrawElements(GL_TRIANGLES, building_numind, GL_UNSIGNED_SHORT, 0);
         }
     }
@@ -686,7 +646,7 @@ void main_loop()
             mSetPos(&model, (vec){nps[i].x, nps[i].y, nps[i].z});
             mRotZ(&model, nps[i].rot);
             mMul(&modelview, &model, &view);
-            glUniformMatrix4fv(modelview_id, 1, GL_FALSE, (f32*)&modelview.m[0][0]);
+            glUniformMatrix4fv(modelview_id, 1, GL_FALSE, (float*)&modelview.m[0][0]);
             glDrawElements(GL_TRIANGLES, uniman_numind, GL_UNSIGNED_BYTE, 0);
         }
     }
@@ -702,7 +662,7 @@ void main_loop()
             mSetPos(&model, (vec){nps[i].x, nps[i].y, nps[i].z});
             mRotZ(&model, nps[i].rot);
             mMul(&modelview, &model, &view);
-            glUniformMatrix4fv(modelview_id, 1, GL_FALSE, (f32*)&modelview.m[0][0]);
+            glUniformMatrix4fv(modelview_id, 1, GL_FALSE, (float*)&modelview.m[0][0]);
             glDrawElements(GL_TRIANGLES, face_numind, GL_UNSIGNED_BYTE, 0);
         }
     }
@@ -726,7 +686,7 @@ void main_loop()
             mIdent(&model);
             mSetPos(&model, (vec){i, cy-d, 0.f});
             mMul(&modelview, &model, &view);
-            glUniformMatrix4fv(modelview_id, 1, GL_FALSE, (f32*)&modelview.m[0][0]);
+            glUniformMatrix4fv(modelview_id, 1, GL_FALSE, (float*)&modelview.m[0][0]);
             glDrawElements(GL_TRIANGLES, window_numind, GL_UNSIGNED_BYTE, 0);
         }
 
@@ -738,7 +698,7 @@ void main_loop()
             mIdent(&model);
             mSetPos(&model, (vec){i, cy+d, 0.f});
             mMul(&modelview, &model, &view);
-            glUniformMatrix4fv(modelview_id, 1, GL_FALSE, (f32*)&modelview.m[0][0]);
+            glUniformMatrix4fv(modelview_id, 1, GL_FALSE, (float*)&modelview.m[0][0]);
             glDrawElements(GL_TRIANGLES, window_numind, GL_UNSIGNED_BYTE, 0);
         }
 
@@ -750,7 +710,7 @@ void main_loop()
             mIdent(&model);
             mSetPos(&model, (vec){cx-d, i, 0.f});
             mMul(&modelview, &model, &view);
-            glUniformMatrix4fv(modelview_id, 1, GL_FALSE, (f32*)&modelview.m[0][0]);
+            glUniformMatrix4fv(modelview_id, 1, GL_FALSE, (float*)&modelview.m[0][0]);
             glDrawElements(GL_TRIANGLES, window_numind, GL_UNSIGNED_BYTE, 0);
         }
 
@@ -762,7 +722,7 @@ void main_loop()
             mIdent(&model);
             mSetPos(&model, (vec){cx+d, i, 0.f});
             mMul(&modelview, &model, &view);
-            glUniformMatrix4fv(modelview_id, 1, GL_FALSE, (f32*)&modelview.m[0][0]);
+            glUniformMatrix4fv(modelview_id, 1, GL_FALSE, (float*)&modelview.m[0][0]);
             glDrawElements(GL_TRIANGLES, window_numind, GL_UNSIGNED_BYTE, 0);
         }
     }
@@ -774,7 +734,7 @@ void main_loop()
     mIdent(&model);
     mSetPos(&model, (vec){cx, cy, 0.f});
     mMul(&modelview, &model, &view);
-    glUniformMatrix4fv(modelview_id, 1, GL_FALSE, (f32*)&modelview.m[0][0]);
+    glUniformMatrix4fv(modelview_id, 1, GL_FALSE, (float*)&modelview.m[0][0]);
     glDrawElements(GL_TRIANGLES, window_numind, GL_UNSIGNED_BYTE, 0);
 
     // blend off
@@ -794,7 +754,7 @@ int main(int argc, char** argv)
 //*************************************
 // setup render context / window
 //*************************************
-    printf("ChatSociety.org\nx = show instructions\nw,a,s,d = move\nL-SHIFT = sprint\nq,e = move down/up a floor\nLEFT/RIGHT/UP/DOWN = View panning\no,p = increase/decrease draw distance\nc = pop chat window\ni = invert identity\n\nOn mobile/touch screen the buttons are invisible but the layout is four buttons at the top of the screen, forward and backward on the left and right corners, up and down levels of the buildings in the center left and right and upper left and right of the screen is strafe left and right. Center screen allows free look with touch and drag. To pop a chat tap the bottom center of the screen, chats will open in a secondary tab/popup window.\n\n");
+    printf("ChatSociety.org\nx = show instructions\nw,a,s,d = move\nL-SHIFT = sprint\nq,e = move down/up a floor\nLEFT/RIGHT/UP/DOWN = View panning\no,p = increase/decrease draw distance\nc = pop chat window\ni = invert identity\n\nOn mobile/touch screen the buttons are invisible but the layout is simply; left side of screen is touch and drag for movement, right side is look. Left side top and bottom are buttons to take you up/down floors in the buildings and the right side bottom is a button to open the chat for the current floor of the building.\n\n");
     
     SDL_Init(SDL_INIT_VIDEO|SDL_INIT_EVENTS);
 
