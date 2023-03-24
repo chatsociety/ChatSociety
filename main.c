@@ -100,7 +100,7 @@ ESModel mdlFace;
 // utility functions
 //*************************************
 void timestamp(char* ts){const time_t tt = time(0);strftime(ts, 16, "%H:%M:%S", localtime(&tt));}
-forceinline float floatTime(){return ((float)SDL_GetTicks())*0.001f;}
+forceinline float fTime(){return ((float)SDL_GetTicks())*0.001f;}
 char chaturl[512];
 void genChat()
 {
@@ -201,7 +201,7 @@ void get_data_callback(void* user_data, void* buff, int size)
         nps[pi].y = -nps[pi].y;
         nps[pi].rot = -nps[pi].rot;
         //printf("D: %f %f %f, %f, %f %f %f %f\n", nps[pi].x, nps[pi].y,  nps[pi].z, nps[pi].rot, nps[pi].c1, nps[pi].c2, nps[pi].c3, nps[pi].c4);
-        nps[pi].t = floatTime();
+        nps[pi].t = fTime();
         pi++;
     }
     gotresponse = 1;
@@ -267,7 +267,7 @@ void main_loop()
 // time delta for interpolation
 //*************************************
     static float lt = 0;
-    t = floatTime();
+    t = fTime();
     const float dt = t-lt;
     lt = t;
 
@@ -849,19 +849,16 @@ int main(int argc, char** argv)
 //*************************************
 // projection
 //*************************************
-
     doPerspective();
 
 //*************************************
 // compile & link shader program
 //*************************************
-
     makeLambert1(); // solid color + normals
 
 //*************************************
 // configure render options
 //*************************************
-
     glBlendFunc(GL_SRC_ALPHA, GL_ONE);
     glBlendEquation(GL_FUNC_ADD);
     glEnable(GL_DEPTH_TEST);
@@ -871,7 +868,6 @@ int main(int argc, char** argv)
 //*************************************
 // execute update / render loop
 //*************************************
-
     emscripten_set_resize_callback(EMSCRIPTEN_EVENT_TARGET_WINDOW, NULL, EM_FALSE, emscripten_resize_event);
     emscripten_set_main_loop(main_loop, 0, 1);
     return 0;
