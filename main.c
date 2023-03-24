@@ -490,7 +490,9 @@ void main_loop()
         if(ww > wh){ttdx *= ww/wh;}
         if(wh > ww){ttdy *= wh/ww;}
         if(ttdx > 1.6f){ttdx = 1.6f;}
+        else if(ttdx < -1.6f){ttdx = -1.6f;}
         if(ttdy > 1.6f){ttdy = 1.6f;}
+        else if(ttdy < -1.6f){ttdy = -1.6f;}
         vec vdc, m;
         mGetViewZ(&vdc, view);
         vMulS(&m, vdc, ttdy * dt);
