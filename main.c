@@ -95,7 +95,6 @@ mat modelview;
 ESModel mdlFloor;
 ESModel mdlBuilding;
 ESModel mdlWindow;
-ESModel mdlSun;
 ESModel mdlMoon;
 ESModel mdlMan[5];
 ESModel mdlFace;
