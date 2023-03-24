@@ -25,6 +25,8 @@
 #include "assets/building.h"
 #include "assets/window.h"
 
+#include "assets/moon.h"
+
 #include "assets/face.h"
 #include "assets/uniman.h"
 #include "assets/man.h"
@@ -93,6 +95,8 @@ mat modelview;
 ESModel mdlFloor;
 ESModel mdlBuilding;
 ESModel mdlWindow;
+ESModel mdlSun;
+ESModel mdlMoon;
 ESModel mdlMan[5];
 ESModel mdlFace;
 
@@ -626,6 +630,17 @@ void main_loop()
         }
     }
 
+    // render moon
+    //glUniform3f(color_id, 0.f, 0.8f+(fabsf(cosf(-pp.x*0.1f))*0.2f), 0.7f+(fabsf(sinf(-pp.x*0.1f))*0.3f));
+    glUniform3f(color_id, fabsf(sinf(-pp.y*0.1f)), 1.f, 1.f);
+    //glUniform3f(color_id, 0.f, 1.f, 1.f);
+    modelBind(&mdlMoon);
+    mIdent(&model);
+    mSetPos(&model, (vec){-pp.x, -pp.y, 0.f});
+    mMul(&modelview, &model, &view);
+    glUniformMatrix4fv(modelview_id, 1, GL_FALSE, (float*)&modelview.m[0][0]);
+    glDrawElements(GL_TRIANGLES, moon_numind, GL_UNSIGNED_BYTE, 0);
+
     // render net players
 #ifdef MEGA_EFFICIENCY
     modelBind(&mdlMan[0]);
@@ -817,6 +832,11 @@ int main(int argc, char** argv)
     esBind(GL_ARRAY_BUFFER, &mdlWindow.vid, window_vertices, sizeof(window_vertices), GL_STATIC_DRAW);
     esBind(GL_ARRAY_BUFFER, &mdlWindow.nid, window_normals, sizeof(window_normals), GL_STATIC_DRAW);
     esBind(GL_ELEMENT_ARRAY_BUFFER, &mdlWindow.iid, window_indices, sizeof(window_indices), GL_STATIC_DRAW);
+
+    // ***** BIND MOON *****
+    esBind(GL_ARRAY_BUFFER, &mdlMoon.vid, moon_vertices, sizeof(moon_vertices), GL_STATIC_DRAW);
+    esBind(GL_ARRAY_BUFFER, &mdlMoon.nid, moon_normals, sizeof(moon_normals), GL_STATIC_DRAW);
+    esBind(GL_ELEMENT_ARRAY_BUFFER, &mdlMoon.iid, moon_indices, sizeof(moon_indices), GL_STATIC_DRAW);
 
     // ***** BIND FACE *****
     esBind(GL_ARRAY_BUFFER, &mdlFace.vid, face_vertices, sizeof(face_vertices), GL_STATIC_DRAW);
