@@ -303,7 +303,7 @@ void main_loop()
             {
                 if(istouch == 0)
                 {
-                    emscripten_run_script("alert('The buttons are invisible but the layout is simply; left side of screen is touch and drag for movement, right side is look. Left side top and bottom are buttons to take you up/down floors in the buildings and the right side bottom is a button to open the chat for the current floor of the building.');");
+                    emscripten_run_script("alert('The buttons are invisible but the layout is simply; left side of screen is touch and drag for movement, right side is look. Left side top and bottom are buttons to take you up/down floors in the buildings and the right side bottom is the button to open the chat for the current floor of the building.');");
                     ddist = 12.f;
                     ddist2=(ddist*ddist)+10.f;
                     istouch = 1;
@@ -326,8 +326,8 @@ void main_loop()
                 }
                 else // move side
                 {
-                    if(event.tfinger.y < 0.13f && pi == 1){if(pf < 21.f){pf+=1.f;}else{frust_dist = 42.f;}} // up
-                    else if(event.tfinger.y > 0.87f && pi == 1 && pf > 0.f){pf-=1.f;frust_dist = 3.f;} // down
+                    if(event.tfinger.y < 0.16f && pi == 1){if(pf < 21.f){pf+=1.f;}else{frust_dist = 42.f;}} // up
+                    else if(event.tfinger.y > 0.84f && pi == 1 && pf > 0.f){pf-=1.f;frust_dist = 3.f;} // down
                     else // move
                     {
                         tsx = event.tfinger.x;
@@ -802,7 +802,7 @@ int main(int argc, char** argv)
 //*************************************
 // setup render context / window
 //*************************************
-    printf("ChatSociety.org\nx = show instructions\nw,a,s,d = move\nL-SHIFT = sprint\nq,e = move down/up a floor\nLEFT/RIGHT/UP/DOWN = View panning\no,p = increase/decrease draw distance\nc = pop chat window\ni = invert identity\n\nOn mobile/touch screen the buttons are invisible but the layout is simply; left side of screen is touch and drag for movement, right side is look. Left side top and bottom are buttons to take you up/down floors in the buildings and the right side bottom is a button to open the chat for the current floor of the building.\n\n");
+    printf("ChatSociety.org\nx = show instructions\nw,a,s,d = move\nL-SHIFT = sprint\nq,e = move down/up a floor\nLEFT/RIGHT/UP/DOWN = View panning\no,p = increase/decrease draw distance\nc = pop chat window\ni = invert identity\n\nOn mobile/touch screen the buttons are invisible but the layout is simply; left side of screen is touch and drag for movement, right side is look. Left side top and bottom are buttons to take you up/down floors in the buildings and the right side bottom is the button to open the chat for the current floor of the building.\n\n");
     
     SDL_Init(SDL_INIT_VIDEO|SDL_INIT_EVENTS);
 
