@@ -767,17 +767,14 @@ void main_loop()
     }
 
     // center
-    if(insideFrustum(cx, cy) == 1)
-    {
 #ifndef MEGA_EFFICIENCY
-        if(is_zeroish(cx, cy) == 1){glUniform3f(color_id, fabsf(sinf(t*0.1f)), fabsf(cosf(t*0.1f)), fabsf(sinf(t*0.1f)));}else{glUniform3f(color_id, 0.f, 0.56f, 0.8f);} // make spawn square identifiable
+    if(is_zeroish(cx, cy) == 1){glUniform3f(color_id, fabsf(sinf(t*0.1f)), fabsf(cosf(t*0.1f)), fabsf(sinf(t*0.1f)));}else{glUniform3f(color_id, 0.f, 0.56f, 0.8f);} // make spawn square identifiable
 #endif
-        mIdent(&model);
-        mSetPos(&model, (vec){cx, cy, 0.f});
-        mMul(&modelview, &model, &view);
-        glUniformMatrix4fv(modelview_id, 1, GL_FALSE, (float*)&modelview.m[0][0]);
-        glDrawElements(GL_TRIANGLES, window_numind, GL_UNSIGNED_BYTE, 0);
-    }
+    mIdent(&model);
+    mSetPos(&model, (vec){cx, cy, 0.f});
+    mMul(&modelview, &model, &view);
+    glUniformMatrix4fv(modelview_id, 1, GL_FALSE, (float*)&modelview.m[0][0]);
+    glDrawElements(GL_TRIANGLES, window_numind, GL_UNSIGNED_BYTE, 0);
 
     // blend off
     glDisable(GL_BLEND);
