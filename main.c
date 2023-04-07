@@ -58,6 +58,7 @@ float xrot = 0.f;
 float yrot = 1.5f;
 float ddist = 32.f; // draw distance
 float ddist2 = 1024.f; // draw distance squared
+vec look_dir; // camera look direction
 
 // player vars
 vec pp = (vec){0.f, 0.f, 0.f}; // player position
@@ -152,6 +153,19 @@ uint is_zeroish(const float x, const float y)
     return (x > -1.f && x < 1.f && y > -1.f && y < 1.f);
 }
 #endif
+uint insideFrustum(const float x, const float y)
+{
+    // check the distance
+    const float xm = x+pp.x;
+    const float ym = y+pp.y;
+    if(xm*xm + ym*ym > 3.f)
+    {
+        // check the angles
+        float tx = x+pp.x, ty = y+pp.y;
+        return (tx*look_dir.x) + (ty*look_dir.y) > 0.f;
+    }
+    return 1;
+}
 
 //*************************************
 // network functions
@@ -450,21 +464,18 @@ void main_loop()
         move_speed = 1.6f;
 
     const vec lp = pp;
+    mGetViewZ(&look_dir, view);
 
     if(ks[0] == 1) // W
     {
-        vec vdc;
-        mGetViewZ(&vdc, view);
         vec m;
-        vMulS(&m, vdc, move_speed * dt);
+        vMulS(&m, look_dir, move_speed * dt);
         vSub(&pp, pp, m);
     }
     else if(ks[2] == 1) // S
     {
-        vec vdc;
-        mGetViewZ(&vdc, view);
         vec m;
-        vMulS(&m, vdc, move_speed * dt);
+        vMulS(&m, look_dir, move_speed * dt);
         vAdd(&pp, pp, m);
     }
 
@@ -566,8 +577,8 @@ void main_loop()
 
     if(yrot > 2.5f)
         yrot = 2.5f;
-    if(yrot < 0.f)
-        yrot = 0.f;
+    if(yrot < 0.1f)
+        yrot = 0.1f;
 
     lx = mx, ly = my;
 
@@ -621,6 +632,8 @@ void main_loop()
     {
         for(float x = cx-ddist; x <= cx+ddist; x+=4.f)
         {
+            if(insideFrustum(x,y) == 0){continue;}
+            
             mIdent(&model);
             mSetPos(&model, (vec){x, y, 0.f});
             mMul(&modelview, &model, &view);
@@ -650,6 +663,8 @@ void main_loop()
 
         if(t - nps[i].t < 3.f)
         {
+            if(insideFrustum(nps[i].x, nps[i].y) == 0){continue;}
+
 #ifndef MEGA_EFFICIENCY
             if(nps[i].x < -2.f && nps[i].y < -2.f){modelBind(&mdlMan[1]);}
             else if(nps[i].x > 2.f && nps[i].y > 2.f){modelBind(&mdlMan[2]);}
@@ -673,6 +688,8 @@ void main_loop()
 
         if(t - nps[i].t < 3.f)
         {
+            if(insideFrustum(nps[i].x, nps[i].y) == 0){continue;}
+
             glUniform3f(color_id, nps[i].c2, nps[i].c3, nps[i].c4);
             mIdent(&model);
             mSetPos(&model, (vec){nps[i].x, nps[i].y, nps[i].z});
@@ -696,6 +713,8 @@ void main_loop()
     {
         for(float i = cx-d; i <= cx+d; i+=4.f)
         {
+            if(insideFrustum(i, cy-d) == 0){continue;}
+
 #ifndef MEGA_EFFICIENCY
             if(is_zeroish(i, cy-d) == 1){glUniform3f(color_id, fabsf(sinf(t*0.1f)), fabsf(cosf(t*0.1f)), fabsf(sinf(t*0.1f)));}else{glUniform3f(color_id, 0.f, 0.56f, 0.8f);} // make spawn square identifiable
 #endif
@@ -708,6 +727,8 @@ void main_loop()
 
         for(float i = cx-d; i <= cx+d; i+=4.f)
         {
+            if(insideFrustum(i, cy+d) == 0){continue;}
+
 #ifndef MEGA_EFFICIENCY
             if(is_zeroish(i, cy+d) == 1){glUniform3f(color_id, fabsf(sinf(t*0.1f)), fabsf(cosf(t*0.1f)), fabsf(sinf(t*0.1f)));}else{glUniform3f(color_id, 0.f, 0.56f, 0.8f);} // make spawn square identifiable
 #endif
@@ -720,6 +741,8 @@ void main_loop()
 
         for(float i = cy-d+4.f; i <= cy+d-4.f; i+=4.f)
         {
+            if(insideFrustum(cx-d, i) == 0){continue;}
+
 #ifndef MEGA_EFFICIENCY
             if(is_zeroish(cx-d, i) == 1){glUniform3f(color_id, fabsf(sinf(t*0.1f)), fabsf(cosf(t*0.1f)), fabsf(sinf(t*0.1f)));}else{glUniform3f(color_id, 0.f, 0.56f, 0.8f);} // make spawn square identifiable
 #endif
@@ -732,6 +755,8 @@ void main_loop()
 
         for(float i = cy-d+4.f; i <= cy+d-4.f; i+=4.f)
         {
+            if(insideFrustum(cx+d, i) == 0){continue;}
+
 #ifndef MEGA_EFFICIENCY
             if(is_zeroish(cx+d, i) == 1){glUniform3f(color_id, fabsf(sinf(t*0.1f)), fabsf(cosf(t*0.1f)), fabsf(sinf(t*0.1f)));}else{glUniform3f(color_id, 0.f, 0.56f, 0.8f);} // make spawn square identifiable
 #endif
@@ -744,14 +769,17 @@ void main_loop()
     }
 
     // center
+    if(insideFrustum(cx, cy) == 1)
+    {
 #ifndef MEGA_EFFICIENCY
-    if(is_zeroish(cx, cy) == 1){glUniform3f(color_id, fabsf(sinf(t*0.1f)), fabsf(cosf(t*0.1f)), fabsf(sinf(t*0.1f)));}else{glUniform3f(color_id, 0.f, 0.56f, 0.8f);} // make spawn square identifiable
+        if(is_zeroish(cx, cy) == 1){glUniform3f(color_id, fabsf(sinf(t*0.1f)), fabsf(cosf(t*0.1f)), fabsf(sinf(t*0.1f)));}else{glUniform3f(color_id, 0.f, 0.56f, 0.8f);} // make spawn square identifiable
 #endif
-    mIdent(&model);
-    mSetPos(&model, (vec){cx, cy, 0.f});
-    mMul(&modelview, &model, &view);
-    glUniformMatrix4fv(modelview_id, 1, GL_FALSE, (float*)&modelview.m[0][0]);
-    glDrawElements(GL_TRIANGLES, window_numind, GL_UNSIGNED_BYTE, 0);
+        mIdent(&model);
+        mSetPos(&model, (vec){cx, cy, 0.f});
+        mMul(&modelview, &model, &view);
+        glUniformMatrix4fv(modelview_id, 1, GL_FALSE, (float*)&modelview.m[0][0]);
+        glDrawElements(GL_TRIANGLES, window_numind, GL_UNSIGNED_BYTE, 0);
+    }
 
     // blend off
     glDisable(GL_BLEND);
@@ -782,6 +810,7 @@ int main(int argc, char** argv)
     wnd = SDL_CreateWindow(appTitle, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, winw, winh, SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN);
     SDL_GL_SetSwapInterval(0);
     glc = SDL_GL_CreateContext(wnd);
+    // SDL_SetHint(SDL_HINT_TOUCH_MOUSE_EVENTS, "0");
 
     // seems to be a bug in emscripten?
     glDisableVertexAttribArray(1);
