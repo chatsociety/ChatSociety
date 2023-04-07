@@ -211,7 +211,7 @@ void get_data_callback(void* user_data, void* buff, int size)
 
         memcpy(&nps[pi].x, &buff[i], 16);
 
-        // if he's farther than ddist, ignore
+        // if he's further than ddist, ignore
         if(vDistSq(pp, (vec){nps[pi].x, nps[pi].y, nps[pi].z}) > ddist2)
             continue;
 
@@ -508,10 +508,10 @@ void main_loop()
         else if(ttdx < -1.6f){ttdx = -1.6f;}
         if(ttdy > 1.6f){ttdy = 1.6f;}
         else if(ttdy < -1.6f){ttdy = -1.6f;}
-        vec vdc, m;
-        mGetViewZ(&vdc, view);
-        vMulS(&m, vdc, ttdy * dt);
+        vec m;
+        vMulS(&m, look_dir, ttdy * dt);
         vSub(&pp, pp, m);
+        vec vdc;
         mGetViewX(&vdc, view);
         vMulS(&m, vdc, ttdx * dt);
         vSub(&pp, pp, m);
