@@ -158,7 +158,7 @@ uint insideFrustum(const float x, const float y)
 {
     const float xm = x+pp.x, ym = y+pp.y;
     if(xm*xm + ym*ym > frust_dist) // check the distance
-        return (xm*look_dir.x) + (ym*look_dir.y) > 0.f; // check the angles
+        return (xm*look_dir.x) + (ym*look_dir.y) > 0.f; // check the angle
     return 1;
 }
 
