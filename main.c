@@ -11,6 +11,8 @@
     buildings rendering correctly.  
 */
 
+//#define MEGA_EFFICIENCY
+
 #include <emscripten.h>
 #include <emscripten/html5.h>
 #include <time.h>
@@ -29,12 +31,12 @@
 
 #include "assets/face.h"
 #include "assets/uniman.h"
-#include "assets/man.h"
-#include "assets/man2.h"
-#include "assets/lady.h"
-#include "assets/lady2.h"
-
-//#define MEGA_EFFICIENCY
+#ifndef MEGA_EFFICIENCY
+    #include "assets/man.h"
+    #include "assets/man2.h"
+    #include "assets/lady.h"
+    #include "assets/lady2.h"
+#endif
 
 #define uint GLuint
 #define sint GLint
@@ -871,6 +873,7 @@ int main(int argc, char** argv)
     esBind(GL_ARRAY_BUFFER, &mdlMan[0].nid, uniman_normals, sizeof(uniman_normals), GL_STATIC_DRAW);
     esBind(GL_ELEMENT_ARRAY_BUFFER, &mdlMan[0].iid, uniman_indices, sizeof(uniman_indices), GL_STATIC_DRAW);
 
+#ifndef MEGA_EFFICIENCY
     // ***** BIND MAN *****
     esBind(GL_ARRAY_BUFFER, &mdlMan[1].vid, man_vertices, sizeof(man_vertices), GL_STATIC_DRAW);
     esBind(GL_ARRAY_BUFFER, &mdlMan[1].nid, man_normals, sizeof(man_normals), GL_STATIC_DRAW);
@@ -890,6 +893,7 @@ int main(int argc, char** argv)
     esBind(GL_ARRAY_BUFFER, &mdlMan[4].vid, lady2_vertices, sizeof(lady2_vertices), GL_STATIC_DRAW);
     esBind(GL_ARRAY_BUFFER, &mdlMan[4].nid, lady2_normals, sizeof(lady2_normals), GL_STATIC_DRAW);
     esBind(GL_ELEMENT_ARRAY_BUFFER, &mdlMan[4].iid, lady2_indices, sizeof(lady2_indices), GL_STATIC_DRAW);
+#endif
 
 //*************************************
 // projection
