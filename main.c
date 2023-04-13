@@ -45,7 +45,7 @@
 //*************************************
 // globals
 //*************************************
-char appTitle[] = "ChatSociety.org";
+const char appTitle[] = "ChatSociety.org";
 SDL_Window* wnd;
 SDL_GLContext glc;
 Uint32 winw = 0, winh = 0;
@@ -322,7 +322,7 @@ void main_loop()
                 }
                 else // move side
                 {
-                    if(event.tfinger.y < 0.16f && pi == 1){if(pf < 21.f){pf+=1.f;}else{frust_dist = 42.f;}} // up
+                    if(event.tfinger.y < 0.16f && pi == 1){if(pf < 21.f){pf+=1.f;}if(pf == 21.f){frust_dist = 42.f;}} // up
                     else if(event.tfinger.y > 0.84f && pi == 1 && pf > 0.f){pf-=1.f;frust_dist = 6.f;} // down
                     else // move
                     {
@@ -378,7 +378,7 @@ void main_loop()
                 if(pi == 1)
                 {
                     if(event.key.keysym.sym == SDLK_q){if(pf > 0.f){pf-=1.f;}frust_dist = 6.f;}
-                    if(event.key.keysym.sym == SDLK_e){if(pf < 21.f){pf+=1.f;}else{frust_dist = 42.f;}}
+                    if(event.key.keysym.sym == SDLK_e){if(pf < 21.f){pf+=1.f;}if(pf == 21.f){frust_dist = 42.f;}}
                 }
                 if(event.key.keysym.sym == SDLK_o){if(ddist > 4.f){ddist -= 4.f;ddist2=(ddist*ddist)+10.f;}}
                 if(event.key.keysym.sym == SDLK_p){ddist += 4.f;ddist2=(ddist*ddist)+10.f;}
