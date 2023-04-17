@@ -155,7 +155,7 @@ uint is_zeroish(const float x, const float y)
     return (x > -1.f && x < 1.f && y > -1.f && y < 1.f);
 }
 #endif
-float frust_dist = 6.f;
+float frust_dist = 18.f;
 uint insideFrustum(const float x, const float y)
 {
     const float xm = x+pp.x, ym = y+pp.y;
@@ -323,7 +323,7 @@ void main_loop()
                 else // move side
                 {
                     if(event.tfinger.y < 0.16f && pi == 1){if(pf < 21.f){pf+=1.f;}if(pf == 21.f){frust_dist = 42.f;}} // up
-                    else if(event.tfinger.y > 0.84f && pi == 1 && pf > 0.f){pf-=1.f;frust_dist = 6.f;} // down
+                    else if(event.tfinger.y > 0.84f && pi == 1 && pf > 0.f){pf-=1.f;frust_dist = 18.f;} // down
                     else // move
                     {
                         tsx = event.tfinger.x;
@@ -377,7 +377,7 @@ void main_loop()
                 if(event.key.keysym.sym == SDLK_DOWN){ks[8] = 1;}
                 if(pi == 1)
                 {
-                    if(event.key.keysym.sym == SDLK_q){if(pf > 0.f){pf-=1.f;}frust_dist = 6.f;}
+                    if(event.key.keysym.sym == SDLK_q){if(pf > 0.f){pf-=1.f;}frust_dist = 18.f;}
                     if(event.key.keysym.sym == SDLK_e){if(pf < 21.f){pf+=1.f;}if(pf == 21.f){frust_dist = 42.f;}}
                 }
                 if(event.key.keysym.sym == SDLK_o){if(ddist > 4.f){ddist -= 4.f;ddist2=(ddist*ddist)+10.f;}}
@@ -554,7 +554,7 @@ void main_loop()
             {
                 if(dx > 1.07f || dy > 1.07f)
                 {
-                    frust_dist = 6.f;
+                    frust_dist = 18.f;
                     pf = 0.f;
                 }
             }
