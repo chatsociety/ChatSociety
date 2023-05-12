@@ -39,7 +39,7 @@
 
 </head>
 <body>
-    <canvas class="cstyle" id="canvas" oncontextmenu="event.preventDefault()" tabindex=-1></canvas>
+    <canvas class="cstyle" id="canvas" onclick="this.focus()" oncontextmenu="event.preventDefault()" tabindex=-1></canvas>
 
     <script type='text/javascript'>
     window.onbeforeunload = function(){return "You will lose the state of your current chat.";};
