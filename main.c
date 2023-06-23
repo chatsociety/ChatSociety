@@ -611,9 +611,6 @@ void main_loop()
 //*************************************
 
     // shade colored lambertian
-    shadeLambert1(&position_id, &projection_id, &modelview_id, &lightpos_id, &normal_id, &color_id, &opacity_id);
-    glUniformMatrix4fv(projection_id, 1, GL_FALSE, (float*)&projection.m[0][0]);
-    glUniform3f(lightpos_id, 0.f, 0.f, 0.f);
     glUniform1f(opacity_id, 1.f);
 
     // render floor
@@ -913,6 +910,10 @@ int main(int argc, char** argv)
     glEnable(GL_DEPTH_TEST);
     glDisable(GL_CULL_FACE);
     glClearColor(0.3f, 0.745f, 0.8863f, 0.0f);
+
+    shadeLambert1(&position_id, &projection_id, &modelview_id, &lightpos_id, &normal_id, &color_id, &opacity_id);
+    glUniformMatrix4fv(projection_id, 1, GL_FALSE, (float*)&projection.m[0][0]);
+    glUniform3f(lightpos_id, 0.f, 0.f, 0.f);
 
 //*************************************
 // execute update / render loop
