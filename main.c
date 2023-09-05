@@ -78,6 +78,7 @@ struct
 }
 typedef s_netplayer; // 36 bytes
 s_netplayer nps[MAX_PLAYERS] = {0};
+char custom_url[512];
 
 // render state id's
 GLint projection_id;
@@ -222,7 +223,7 @@ void get_data_callback(void* user_data, void* buff, int size)
 }
 void dispatchNetwork()
 {
-    char url[512];
+    char url[2048];
     unsigned char d[16];
     if(pf > 0.f)
         pp.z = 0.386f+(0.444f*(pf-1.f)); // for the net code send
@@ -232,10 +233,18 @@ void dispatchNetwork()
     memcpy(&d[12], (unsigned char*)&xrot, 4);
     // https://chatsociety.repl.co/dw3rtvge.php
     // http://vfcash.co.uk/dw3rtvge.php
-    if(is_https() == 0)
-        sprintf(url, "http://vfcash.co.uk/dw3rtvge.php?a=%%%02X%%%02X%%%02X%%%02X%%%02X%%%02X%%%02X%%%02X%%%02X%%%02X%%%02X%%%02X%%%02X%%%02X%%%02X%%%02X&b=%%%02X%%%02X%%%02X%%%02X", d[0], d[1], d[2], d[3], d[4], d[5], d[6], d[7], d[8], d[9], d[10], d[11], d[12], d[13], d[14], d[15], netid[0], netid[1], netid[2], netid[3]);
+    if(custom_url[0] == 0x00)
+    {
+        // if(is_https() == 0)
+        //     sprintf(url, "http://vfcash.co.uk/dw3rtvge.php?a=%%%02X%%%02X%%%02X%%%02X%%%02X%%%02X%%%02X%%%02X%%%02X%%%02X%%%02X%%%02X%%%02X%%%02X%%%02X%%%02X&b=%%%02X%%%02X%%%02X%%%02X", d[0], d[1], d[2], d[3], d[4], d[5], d[6], d[7], d[8], d[9], d[10], d[11], d[12], d[13], d[14], d[15], netid[0], netid[1], netid[2], netid[3]);
+        // else
+        //     sprintf(url, "https://vfcash.co.uk:444/dw3rtvge.php?a=%%%02X%%%02X%%%02X%%%02X%%%02X%%%02X%%%02X%%%02X%%%02X%%%02X%%%02X%%%02X%%%02X%%%02X%%%02X%%%02X&b=%%%02X%%%02X%%%02X%%%02X", d[0], d[1], d[2], d[3], d[4], d[5], d[6], d[7], d[8], d[9], d[10], d[11], d[12], d[13], d[14], d[15], netid[0], netid[1], netid[2], netid[3]);
+        sprintf(url, "https://chatsociety.repl.co/dw3rtvge.php?a=%%%02X%%%02X%%%02X%%%02X%%%02X%%%02X%%%02X%%%02X%%%02X%%%02X%%%02X%%%02X%%%02X%%%02X%%%02X%%%02X&b=%%%02X%%%02X%%%02X%%%02X", d[0], d[1], d[2], d[3], d[4], d[5], d[6], d[7], d[8], d[9], d[10], d[11], d[12], d[13], d[14], d[15], netid[0], netid[1], netid[2], netid[3]); 
+    }
     else
-        sprintf(url, "https://vfcash.co.uk:444/dw3rtvge.php?a=%%%02X%%%02X%%%02X%%%02X%%%02X%%%02X%%%02X%%%02X%%%02X%%%02X%%%02X%%%02X%%%02X%%%02X%%%02X%%%02X&b=%%%02X%%%02X%%%02X%%%02X", d[0], d[1], d[2], d[3], d[4], d[5], d[6], d[7], d[8], d[9], d[10], d[11], d[12], d[13], d[14], d[15], netid[0], netid[1], netid[2], netid[3]);
+    {
+        sprintf(url, "%s?a=%%%02X%%%02X%%%02X%%%02X%%%02X%%%02X%%%02X%%%02X%%%02X%%%02X%%%02X%%%02X%%%02X%%%02X%%%02X%%%02X&b=%%%02X%%%02X%%%02X%%%02X", custom_url, d[0], d[1], d[2], d[3], d[4], d[5], d[6], d[7], d[8], d[9], d[10], d[11], d[12], d[13], d[14], d[15], netid[0], netid[1], netid[2], netid[3]);
+    }
     emscripten_async_wget_data(url, NULL, get_data_callback, NULL);
 }
 
@@ -570,7 +579,7 @@ void main_loop()
     }
 
 //*************************************
-// delta orbit / mouse control
+// mouse control
 //*************************************
     xrot += (lx-mx)*sens;
     yrot += (ly-my)*sens;
@@ -807,7 +816,17 @@ int main(int argc, char** argv)
     // SDL_SetHint(SDL_HINT_TOUCH_MOUSE_EVENTS, "0");
 
     // seems to be a bug in emscripten?
-    glDisableVertexAttribArray(1);
+    //glDisableVertexAttribArray(1);
+
+    // custom server?
+    if(argc == 2)
+    {
+        if(strlen(argv[1]) < 512)
+        {
+            sprintf(custom_url, "%s", argv[1]);
+            printf("Custom Server: %s\n", custom_url);
+        }
+    }
 
     // seed random
     srand(time(0));
