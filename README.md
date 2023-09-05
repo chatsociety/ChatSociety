@@ -2,6 +2,8 @@
 
 You can host your own server on replit, I have one setup on https://replit.com/@chatsociety but requests are rate limited.
 
+You can connect to a custom server by specifying a url parameter such as `https://chatsociety.org/?https://myserver.com/server.php`
+
 My main github is [github.com/mrbid](https://github.com/mrbid).
 
 <details>
